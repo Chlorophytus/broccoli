@@ -1,4 +1,7 @@
+// See README.md for license details.
+
 package broccoli
+
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 
 object Verilog extends App {

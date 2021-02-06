@@ -348,3 +348,4 @@ project/metals.sbt
 *.anno.json
 *.fir
 *.v
+*.f

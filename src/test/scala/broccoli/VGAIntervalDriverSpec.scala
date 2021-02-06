@@ -10,13 +10,13 @@ import chiseltest.internal.BackendInterface
 class VGAIntervalDriverSpec extends FreeSpec with ChiselScalatestTester {
   "VGA should increment properly" in {
     test(new VGAIntervalDriver(new VGAIntervalConstraints {
-      val height = 640
+      val width = 640
       val hFrontPorch = 664
       val hBlank = 720
       val hBackPorch = 800
       val hNegateSync = true
 
-      val width = 480
+      val height = 480
       val vFrontPorch = 483
       val vBlank = 487
       val vBackPorch = 500
@@ -34,17 +34,20 @@ class VGAIntervalDriverSpec extends FreeSpec with ChiselScalatestTester {
 
       println("testing X...")
       // hack mechanism: we can just run the test for one line of X
-      for (x <- 800 to 0) {
-        dut.io.currentX.expect(x.U(12.W))
+      for (x <- 0 to 799) {
+        dut.io.currentX.expect((799 - x).U(12.W))
         dut.clock.step(1)
       }
+      dut.io.hBlank.expect(true.B)
+      dut.io.currentX.expect(799.U(12.W))
       println("testing X done")
 
+      
       println("testing Y...")
       // and one line of Y to speed it up
-      for (y <- 499 to 0) {
-        dut.io.currentX.expect(0.U(12.W))
-        dut.io.currentY.expect(y.U(12.W))
+      for (y <- 1 to 499) {
+        dut.io.currentX.expect(799.U(12.W))
+        dut.io.currentY.expect((499 - y).U(12.W))
         dut.clock.step(800)
       }
       println("testing Y done")

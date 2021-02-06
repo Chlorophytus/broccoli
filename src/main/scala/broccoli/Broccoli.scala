@@ -3,41 +3,92 @@
 package broccoli
 
 import chisel3._
+import chisel3.util._
 
 /** Root project to generate Verilog from
   */
 class Broccoli extends Module {
   val io = IO(new Bundle {
+    val clockP = Input(Clock())
+    val clockD = Input(Clock())
     val aresetn = Input(Bool())
 
-    val hSync = Output(Bool())
-    val vSync = Output(Bool())
+    val tmdsLane0 = Output(Bool())
+    val tmdsLane1 = Output(Bool())
+    val tmdsLane2 = Output(Bool())
+    val tmdsLaneC = Output(Bool())
 
-    val red = Output(UInt(4.W))
-    val grn = Output(UInt(4.W))
-    val blu = Output(UInt(4.W))
+    val debugVBlank = Output(Bool())
+    val debugHBlank = Output(Bool())
   })
-  // I've yet to find a monitor that supports CVT
-  // gtf 1024 768 60
-  // Modeline "1024x768_60.00"  64.11  1024 1080 1184 1344  768 769 772 795  -HSync +Vsync
+  // cvt 640 480 60
+  // Modeline "640x480_60.00"   23.75  640 664 720 800  480 483 487 500 -hsync +vsync
   val vga = Module(new VGAIntervalDriver(new VGAIntervalConstraints {
-    val height = 1024
-    val hFrontPorch = 1080
-    val hBlank = 1184
-    val hBackPorch = 1344
+    val width = 640
+    val hFrontPorch = 656
+    val hBlank = 752
+    val hBackPorch = 800
     val hNegateSync = true
 
-    val width = 768
-    val vFrontPorch = 769
-    val vBlank = 772
-    val vBackPorch = 795
-    val vNegateSync = false
+    val height = 480
+    val vFrontPorch = 490
+    val vBlank = 492
+    val vBackPorch = 525
+    val vNegateSync = true
   }))
 
+  vga.clock := io.clockP
   vga.io.aresetn := io.aresetn
-  io.hSync := vga.io.hSync
-  io.vSync := vga.io.vSync
-  io.red := (vga.io.currentX ^ vga.io.currentY)(3, 0)
-  io.grn := (vga.io.currentX ^ vga.io.currentY)(4, 1)
-  io.blu := (vga.io.currentX ^ vga.io.currentY)(5, 2)
+
+  // TMDS Lanes
+  val tmdsLaneModuleB = Module(new TMDSLane())
+  val tmdsLaneModuleG = Module(new TMDSLane())
+  val tmdsLaneModuleR = Module(new TMDSLane())
+  val tmdsLaneModuleC = Module(new TMDSClock())
+
+  tmdsLaneModuleB.io.aresetn := io.aresetn
+  tmdsLaneModuleG.io.aresetn := io.aresetn
+  tmdsLaneModuleR.io.aresetn := io.aresetn
+  tmdsLaneModuleC.io.aresetn := io.aresetn
+
+  io.debugHBlank := vga.io.hBlank
+  io.debugVBlank := vga.io.vBlank
+
+  tmdsLaneModuleB.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
+  tmdsLaneModuleG.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
+  tmdsLaneModuleR.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
+  
+  tmdsLaneModuleB.io.d := (vga.io.currentX ^ vga.io.currentY)(9, 2)
+  tmdsLaneModuleG.io.d := (vga.io.currentX ^ vga.io.currentY)(8, 1)
+  tmdsLaneModuleR.io.d := (vga.io.currentX ^ vga.io.currentY)(7, 0)
+
+  tmdsLaneModuleB.io.c := Cat(vga.io.vSync, vga.io.hSync)
+  tmdsLaneModuleG.io.c := 0.U(2.W)
+  tmdsLaneModuleR.io.c := 0.U(2.W)
+
+  // DDR
+  val tmdsDDRModuleB = Module(new TMDSDDR())
+  val tmdsDDRModuleG = Module(new TMDSDDR())
+  val tmdsDDRModuleR = Module(new TMDSDDR())
+  val tmdsDDRModuleC = Module(new TMDSDDR())
+
+  tmdsDDRModuleB.io.d := tmdsLaneModuleB.io.qq
+  tmdsDDRModuleG.io.d := tmdsLaneModuleG.io.qq
+  tmdsDDRModuleR.io.d := tmdsLaneModuleR.io.qq
+  tmdsDDRModuleC.io.d := tmdsLaneModuleC.io.qq
+
+  io.tmdsLane0 := tmdsDDRModuleB.io.q
+  io.tmdsLane1 := tmdsDDRModuleG.io.q
+  io.tmdsLane2 := tmdsDDRModuleR.io.q
+  io.tmdsLaneC := tmdsDDRModuleC.io.q
+
+  tmdsDDRModuleB.io.clock := io.clockD
+  tmdsDDRModuleG.io.clock := io.clockD
+  tmdsDDRModuleR.io.clock := io.clockD
+  tmdsDDRModuleC.io.clock := io.clockD
+
+  tmdsDDRModuleB.io.aresetn := io.aresetn
+  tmdsDDRModuleG.io.aresetn := io.aresetn
+  tmdsDDRModuleR.io.aresetn := io.aresetn
+  tmdsDDRModuleC.io.aresetn := io.aresetn
 }
