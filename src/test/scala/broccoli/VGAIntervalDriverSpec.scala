@@ -42,7 +42,6 @@ class VGAIntervalDriverSpec extends FreeSpec with ChiselScalatestTester {
       dut.io.currentX.expect(799.U(12.W))
       println("testing X done")
 
-      
       println("testing Y...")
       // and one line of Y to speed it up
       for (y <- 1 to 499) {

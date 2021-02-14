@@ -21,8 +21,6 @@ class Broccoli extends Module {
     val debugVBlank = Output(Bool())
     val debugHBlank = Output(Bool())
   })
-  // cvt 640 480 60
-  // Modeline "640x480_60.00"   23.75  640 664 720 800  480 483 487 500 -hsync +vsync
   val vga = Module(new VGAIntervalDriver(new VGAIntervalConstraints {
     val width = 640
     val hFrontPorch = 656
@@ -57,7 +55,7 @@ class Broccoli extends Module {
   tmdsLaneModuleB.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
   tmdsLaneModuleG.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
   tmdsLaneModuleR.io.de := (~vga.io.hBlank) & (~vga.io.vBlank)
-  
+
   tmdsLaneModuleB.io.d := (vga.io.currentX ^ vga.io.currentY)(9, 2)
   tmdsLaneModuleG.io.d := (vga.io.currentX ^ vga.io.currentY)(8, 1)
   tmdsLaneModuleR.io.d := (vga.io.currentX ^ vga.io.currentY)(7, 0)
