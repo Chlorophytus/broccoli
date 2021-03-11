@@ -26,19 +26,19 @@ class ShaderALU extends Module {
     val opcode = Reg(UInt(8.W))
     val result = Reg(SInt(32.W))
     val resultOutput = Reg(SInt(16.W))
-    
-    val flagZero := Reg(Bool())
-    val flagSign := Reg(Bool())
-    val flagSatP := Reg(Bool())
-    val flagSatN := Reg(Bool())
-    val flagDivZ := Reg(Bool())
+
+    val flagZero = Reg(Bool())
+    val flagSign = Reg(Bool())
+    val flagSatP = Reg(Bool())
+    val flagSatN = Reg(Bool())
+    val flagDivZ = Reg(Bool())
 
     // ========================================================================
     //  STATE MACHINE
     // ========================================================================
     when(~io.aresetn) {
       state := 0.U(5.W)
-    }.elsewhen(io.strobe & ~state.orR()) {
+    }.elsewhen(io.enable & io.strobe & ~state.orR()) {
       state := 1.U(5.W)
     }.elsewhen(io.enable) {
       state := state << 1.U(5.W)
@@ -104,12 +104,12 @@ class ShaderALU extends Module {
     // ========================================================================
     when(~io.aresetn) {
       resultOutput := 0.S(16.W)
-    }.elsewhen(enable & state(3)) {
+    }.elsewhen(io.enable & state(3)) {
       switch(Cat(result(31), result(30, 15).orR())) {
-        is("b01".S(2.W)) { resultOutput := 0x7FFF.S(16.W) }
-        is("b11".S(2.W)) { resultOutput := -0x7FFF.S(16.W) }
-        is("b00".S(2.W)) { resultOutput := Cat(result(31), result(14,0)) }
-        is("b10".S(2.W)) { resultOutput := Cat(result(31), result(14,0)) }
+        is("b01".S(2.W)) { resultOutput := 0x7fff.S(16.W) }
+        is("b11".S(2.W)) { resultOutput := -0x7fff.S(16.W) }
+        is("b00".S(2.W)) { resultOutput := Cat(result(31), result(14, 0)) }
+        is("b10".S(2.W)) { resultOutput := Cat(result(31), result(14, 0)) }
       }
     }
     // ========================================================================
@@ -118,44 +118,44 @@ class ShaderALU extends Module {
     // zero flag
     when(~io.aresetn) {
       flagZero := false.B
-    } .elsewhen(enable & state(4) & ~resultOutput.orR()) {
+    }.elsewhen(io.enable & state(4) & ~resultOutput.orR()) {
       flagZero := true.B
-    } .elsewhen(enable & io.clearFlags(1)) {
+    }.elsewhen(io.enable & io.clearFlags(1)) {
       flagZero := false.B
     }
     // sign flag
     when(~io.aresetn) {
       flagSign := false.B
-    } .elsewhen(enable & state(4) & resultOutput(15)) {
+    }.elsewhen(io.enable & state(4) & resultOutput(15)) {
       flagSign := true.B
-    } .elsewhen(enable & io.clearFlags(2)) {
+    }.elsewhen(io.enable & io.clearFlags(2)) {
       flagSign := false.B
     }
     // divz flag
     when(~io.aresetn) {
       flagDivZ := false.B
-    } .elsewhen(enable & state(4) & ~constant.orR() & opcode(4)) {
+    }.elsewhen(io.enable & state(4) & ~constant.orR() & opcode(4)) {
       flagDivZ := true.B
-    } .elsewhen(enable & io.clearFlags(3)) {
+    }.elsewhen(io.enable & io.clearFlags(3)) {
       flagDivZ := false.B
     }
     // satp flag
     when(~io.aresetn) {
       flagSatP := false.B
-    } .elsewhen(enable & state(4) & (~result(31) & result(30, 15).orR())) {
+    }.elsewhen(io.enable & state(4) & (~result(31) & result(30, 15).orR())) {
       flagSatP := true.B
-    } .elsewhen(enable & io.clearFlags(4)) {
+    }.elsewhen(io.enable & io.clearFlags(4)) {
       flagSatP := false.B
     }
     // satn flag
     when(~io.aresetn) {
       flagSatN := false.B
-    } .elsewhen(enable & state(4) & (result(31) & result(30, 15).orR())) {
+    }.elsewhen(io.enable & state(4) & (result(31) & result(30, 15).orR())) {
       flagSatN := true.B
-    } .elsewhen(enable & io.clearFlags(5)) {
+    }.elsewhen(io.enable & io.clearFlags(5)) {
       flagSatN := false.B
     }
-    
+
     io.result := resultOutput
     io.flags(0) := true.B
     io.flags(1) := flagZero

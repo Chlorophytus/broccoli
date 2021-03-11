@@ -1,10 +1,12 @@
-# broccoli
-## About
+# Broccoli
 A soft GPU prototype in Chisel 3
 
-### Specifications
-- 640x480@60Hz output
-- CISC shaders
+## **Licensing**
+See [LICENSE](./LICENSE) for licensing information.
+
+## Specifications
+- 640x480 60Hz output
+- 16-bit 2D shaders
 
 ## Generating Verilog
 A Scala App for generating Verilog has been included, runnable by `sbt`.
@@ -12,5 +14,5 @@ A Scala App for generating Verilog has been included, runnable by `sbt`.
 $ sbt run
 ```
 
-## ISA
-See [INSTRUCTION_SET.md](./INSTRUCTION_SET.md)
+## Architecture
+See [ARCHITECTURE.md](./ARCHITECTURE.md)
