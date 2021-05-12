@@ -9,17 +9,26 @@ import chisel3.experimental.BundleLiterals._
 import chiseltest.internal.BackendInterface
 
 class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
-  final val width = 32
+  final val WIDTH = 64
+  final val TILEWIDTH = 4 // a power-of-2
   
   def hexadecimalDump(buf: Array[BigInt]) {
-    for(cntY <- 0 to buf.length / width - 1) {
-      print(f"${(cntY * width)}%08X |")
-      for(cntX <- 0 to width - 1) {
-        if((cntY * width) + cntX < buf.length) {
-          print(f" ${buf(cntY * width + cntX)}%02x")
+    for(cntY <- 0 to buf.length / WIDTH - 1) {
+      print(f"${(cntY * WIDTH)}%08X |")
+      for(cntX <- 0 to WIDTH - 1) {
+        if((cntY * WIDTH) + cntX < buf.length) {
+          print(f" ${buf(cntY * WIDTH + cntX)}%02x")
         }
       }
       println()
+    }
+  }
+
+  def checkerboard(position: BigInt): BigInt = {
+    if((((position / (WIDTH << TILEWIDTH)) + ((position % WIDTH) >> (TILEWIDTH - 1))) % 2) == 0) {
+      return 0x00
+    } else { 
+      return 0xFF
     }
   }
 
@@ -42,7 +51,7 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
         dut.io.address.poke(cnt.U(12.W))
         // NOTE: This is exhibiting some strange behavior. FIXME and ensure
         // the RTL will display properly...
-        dut.io.data.poke((cnt % 0x100).U(8.W))
+        dut.io.data.poke(checkerboard(cnt).U(8.W))
         dut.io.strobe.poke(true.B)
         dut.clock.step(1)
         dut.io.strobe.poke(false.B)
