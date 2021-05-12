@@ -3,6 +3,10 @@
 
 Things will change frequently. This is just a brainstorming page...
 
+## Framebuffer
+
+The Broccoli PPU has two 320x240 framebuffers.
+
 ## Texture Cells
 
 The Broccoli picture processor is a 2D sprite-based powerhouse.

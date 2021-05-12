@@ -5,8 +5,10 @@ A soft GPU prototype in Chisel 3
 See [LICENSE](./LICENSE) for licensing information.
 
 ## Specifications
-- 640x480 60Hz output
+These are preliminary, they **will** change.
+- 320x240 60Hz output
 - 2.5D shaders and sprites
+- Double-buffer
 
 ## Generating Verilog
 A Scala App for generating Verilog has been included, runnable by `sbt`.
