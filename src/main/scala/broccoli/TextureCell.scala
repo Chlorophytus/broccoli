@@ -197,11 +197,10 @@ class TextureCell extends Module {
     // I was tight on pipeline steps too.
     when(~io.aresetn) {
       textureResult := 0.U(8.W)
-    }.elsewhen(io.enable & ~writeMatrix & ~writeTexels) {
+    }.elsewhen(io.enable & ~io.strobe & ~writeMatrix & ~writeTexels) {
       textureResult := textureMemory.read(
         Cat(textureMFinal(YfinalOFF)(10, 4), textureMFinal(XfinalOFF)(10, 4))
       )
-      // printf(p"it's ${Cat(textureMFinal(YfinalOFF)(11, 4), textureMFinal(XfinalOFF)(11, 4))}")
     }.elsewhen(io.enable & writeTexels & state(1)) {
       textureMemory.write(address, data)
     }

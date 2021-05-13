@@ -341,6 +341,7 @@ hs_err_pid*
 
 .vscode
 project
+.bsp
 !./project
 
 *.anno.json

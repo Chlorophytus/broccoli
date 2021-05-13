@@ -10,7 +10,6 @@ import chiseltest.internal.BackendInterface
 
 class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
   final val WIDTH = 64
-  final val TILEWIDTH = 4 // a power-of-2
   
   def hexadecimalDump(buf: Array[BigInt]) {
     for(cntY <- 0 to buf.length / WIDTH - 1) {
@@ -25,18 +24,21 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
   }
 
   def checkerboard(position: BigInt): BigInt = {
-    if((((position / (WIDTH << TILEWIDTH)) + ((position % WIDTH) >> (TILEWIDTH - 1))) % 2) == 0) {
-      return 0x00
+    // Hit X position bitlevel
+    if((position & 0x40) != 0) { 
+      // Hit Y position next
+      if ((position & 0x2000) != 0) 0xFF else 0x00 
     } else { 
-      return 0xFF
-    }
+      if ((position & 0x2000) != 0) 0x00 else 0xFF
+      }
   }
 
-  "TextureCell should rotate properly" in {
+  "TextureCell should display properly" in {
     test(new TextureCell) { dut =>
       // Knock out timeouts w/seemingly undocumented function call
       dut.clock.setTimeout(0)
       val data = new Array[BigInt](4096)
+      val goat = new Array[BigInt](4096)
 
       // reset here
       dut.io.aresetn.poke(false.B)
@@ -51,7 +53,7 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
         dut.io.address.poke(cnt.U(12.W))
         // NOTE: This is exhibiting some strange behavior. FIXME and ensure
         // the RTL will display properly...
-        dut.io.data.poke(checkerboard(cnt).U(8.W))
+        dut.io.data.poke(checkerboard(cnt << 3).U(8.W))
         dut.io.strobe.poke(true.B)
         dut.clock.step(1)
         dut.io.strobe.poke(false.B)
@@ -69,11 +71,14 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
           dut.clock.step(10)
           dut.io.ready.expect(true.B)
           data(cnt) = dut.io.textureResult.peek().litValue
+          goat(cnt) = checkerboard((((dut.io.currentY.peek().litValue & 0x3F) << 7) | ((dut.io.currentX.peek().litValue & 0x3F) << 0)) << 3)
       }
 
       hexadecimalDump(data)
-      println(f"This test is a work in progress.")
 
+      println("Above hardware output should be identical to...")
+
+      hexadecimalDump(goat)
     }
   }
 }

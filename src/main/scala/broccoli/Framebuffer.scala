@@ -5,27 +5,31 @@ package broccoli
 import chisel3._
 import chisel3.util._
 
-class Framebuffer(width: BigInt, height: BigInt) extends Module {
+class Framebuffer(width: Int, height: Int) extends Module {
+  final val STATEWIDTH = 4
+  final val TOTALADDR = log2Ceil(width * height)
+
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
     val data = Input(UInt(9.W))
     val enable = Input(Bool())
     val strobe = Input(Bool())
 
-    val address = Input(UInt(12.W))
+    val address = Input(UInt(TOTALADDR.W))
     val write = Input(Bool())
     val ready = Output(Bool())
 
     val result = Output(UInt(9.W))
   })
 
-  final val STATEWIDTH = 4
-
   withReset(~io.aresetn) {
     val state = Reg(UInt(STATEWIDTH.W))
     // GOTCHA: 9bpp, easy, because for one thing a shader has the ability to
     // left shift each channel by 1
-    val frameMemory = SyncReadMem(width * height, UInt(9.W))
+    val write = Reg(Bool())
+    val data = Reg(UInt(9.W))
+    val address = Reg(UInt(TOTALADDR.W))
+    val frameMemory = SyncReadMem(1 << TOTALADDR, UInt(9.W))
     val result = Reg(UInt(9.W))
     // ========================================================================
     //  STATE MACHINE
@@ -46,7 +50,7 @@ class Framebuffer(width: BigInt, height: BigInt) extends Module {
       write := io.write
     }
     when(~io.aresetn) {
-      address := 0.U(12.W)
+      address := 0.U(TOTALADDR.W)
     }.elsewhen(io.enable & state(0)) {
       address := io.address
     }
