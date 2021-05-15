@@ -5,7 +5,11 @@ package broccoli
 import chisel3._
 import chisel3.util._
 
-class TextureCell extends Module {
+/** Variable-size square rasterizer with affine texture mapping
+  *
+  * @param length Addressing/dimensions length, this is a power-of-two
+  */
+class TextureCell(length: Int) extends Module {
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
     val data = Input(UInt(8.W))
@@ -20,7 +24,7 @@ class TextureCell extends Module {
     val textureCoordsC = Input(SInt(12.W))
     val textureCoordsD = Input(SInt(12.W))
 
-    val address = Input(UInt(12.W))
+    val address = Input(UInt((length * 2).W))
     val writeTexels = Input(Bool())
     val writeMatrix = Input(Bool())
     val ready = Output(Bool())
@@ -42,9 +46,6 @@ class TextureCell extends Module {
   final val XfinalOFF = 0
   final val YfinalOFF = 1
 
-  // Addressing ordinate width. This is a power of two.
-  final val TEXaordWIDTH = 6
-
   final val Xmap = 0
   final val Ymap = 1
   withReset(~io.aresetn) {
@@ -63,7 +64,7 @@ class TextureCell extends Module {
     // Second 5-tuple cycle supports a texture memory read.
     // AA BB GG RR
     // 64*64 texture memory
-    val textureMemory = SyncReadMem(1 << (TEXaordWIDTH * 2), UInt(8.W))
+    val textureMemory = SyncReadMem(1 << (length * 2), UInt(8.W))
     // ========================================================================
     //  STATE MACHINE
     // ========================================================================
@@ -199,7 +200,10 @@ class TextureCell extends Module {
       textureResult := 0.U(8.W)
     }.elsewhen(io.enable & ~io.strobe & ~writeMatrix & ~writeTexels) {
       textureResult := textureMemory.read(
-        Cat(textureMFinal(YfinalOFF)(10, 4), textureMFinal(XfinalOFF)(10, 4))
+        Cat(
+          textureMFinal(YfinalOFF)(length + 4, 4),
+          textureMFinal(XfinalOFF)(length + 4, 4)
+        )
       )
     }.elsewhen(io.enable & writeTexels & state(1)) {
       textureMemory.write(address, data)

@@ -9,14 +9,14 @@ import chisel3.experimental.BundleLiterals._
 import chiseltest.internal.BackendInterface
 
 class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
-  final val WIDTH = 64
+  final val TEXWIDTH = 6
   
   def hexadecimalDump(buf: Array[BigInt]) {
-    for(cntY <- 0 to buf.length / WIDTH - 1) {
-      print(f"${(cntY * WIDTH)}%08X |")
-      for(cntX <- 0 to WIDTH - 1) {
-        if((cntY * WIDTH) + cntX < buf.length) {
-          print(f" ${buf(cntY * WIDTH + cntX)}%02x")
+    for(cntY <- 0 to buf.length / (1 << TEXWIDTH) - 1) {
+      print(f"${(cntY * (1 << TEXWIDTH))}%08X |")
+      for(cntX <- 0 to (1 << TEXWIDTH) - 1) {
+        if((cntY * (1 << TEXWIDTH)) + cntX < buf.length) {
+          print(f" ${buf(cntY * (1 << TEXWIDTH) + cntX)}%02x")
         }
       }
       println()
@@ -25,20 +25,20 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
 
   def checkerboard(position: BigInt): BigInt = {
     // Hit X position bitlevel
-    if((position & 0x40) != 0) { 
+    if((position & (1 << TEXWIDTH)) != 0) { 
       // Hit Y position next
-      if ((position & 0x2000) != 0) 0xFF else 0x00 
+      if ((position & (1 << ((TEXWIDTH * 2) + 1))) != 0) 0xFF else 0x00 
     } else { 
-      if ((position & 0x2000) != 0) 0x00 else 0xFF
+      if ((position & (1 << ((TEXWIDTH * 2) + 1))) != 0) 0x00 else 0xFF
       }
   }
 
   "TextureCell should display properly" in {
-    test(new TextureCell) { dut =>
+    test(new TextureCell(TEXWIDTH)) { dut =>
       // Knock out timeouts w/seemingly undocumented function call
       dut.clock.setTimeout(0)
-      val data = new Array[BigInt](4096)
-      val goat = new Array[BigInt](4096)
+      val data = new Array[BigInt](1 << (TEXWIDTH * 2))
+      val goat = new Array[BigInt](1 << (TEXWIDTH * 2))
 
       // reset here
       dut.io.aresetn.poke(false.B)
@@ -50,7 +50,7 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
       dut.io.writeTexels.poke(true.B)
       // now write sprite data
       for(cnt <- 0 to data.length - 1) {
-        dut.io.address.poke(cnt.U(12.W))
+        dut.io.address.poke(cnt.U((TEXWIDTH*2).W))
         // NOTE: This is exhibiting some strange behavior. FIXME and ensure
         // the RTL will display properly...
         dut.io.data.poke(checkerboard(cnt << 3).U(8.W))
@@ -63,15 +63,20 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
       dut.io.writeTexels.poke(false.B)
       dut.clock.step(10)
       for(cnt <- 0 to data.length - 1) {
-          dut.io.currentX.poke((cnt % 64).U(12.W))
-          dut.io.currentY.poke((cnt / 64).U(12.W))
+          dut.io.currentX.poke((cnt % (1 << TEXWIDTH)).U(12.W))
+          dut.io.currentY.poke((cnt / (1 << TEXWIDTH)).U(12.W))
           dut.io.strobe.poke(true.B)
           dut.clock.step(1)
           dut.io.strobe.poke(false.B)
           dut.clock.step(10)
           dut.io.ready.expect(true.B)
           data(cnt) = dut.io.textureResult.peek().litValue
-          goat(cnt) = checkerboard((((dut.io.currentY.peek().litValue & 0x3F) << 7) | ((dut.io.currentX.peek().litValue & 0x3F) << 0)) << 3)
+
+          val goatSieve = ((1 << TEXWIDTH) - 1)
+          val goatY = (dut.io.currentY.peek().litValue & goatSieve) <<
+                            (TEXWIDTH + 1)
+          val goatX = (dut.io.currentX.peek().litValue & goatSieve) << 0
+          goat(cnt) = checkerboard((goatY | goatX) << 3)
       }
 
       hexadecimalDump(data)
