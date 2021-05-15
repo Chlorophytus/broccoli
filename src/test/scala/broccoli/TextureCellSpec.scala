@@ -4,11 +4,11 @@ package broccoli
 
 import chisel3._
 import chisel3.tester._
-import org.scalatest.FreeSpec
+import org.scalatest._
 import chisel3.experimental.BundleLiterals._
 import chiseltest.internal.BackendInterface
 
-class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
+class TextureCellSpec extends FreeSpec with ChiselScalatestTester with Matchers {
   final val TEXWIDTH = 6
   
   def hexadecimalDump(buf: Array[BigInt]) {
@@ -79,11 +79,11 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester {
           goat(cnt) = checkerboard((goatY | goatX) << 3)
       }
 
-      hexadecimalDump(data)
+      // hexadecimalDump(data)
+      // println("Above hardware output should be identical to...")
+      // hexadecimalDump(goat)
 
-      println("Above hardware output should be identical to...")
-
-      hexadecimalDump(goat)
+      data should equal (goat)
     }
   }
 }
