@@ -8,8 +8,9 @@ import chisel3.util._
 /** Variable-size square rasterizer with affine texture mapping
   *
   * @param length Addressing/dimensions length, this is a power-of-two
+  * @param freeRunning Sets whether the state machine is free-running
   */
-class TextureCell(length: Int) extends Module {
+class TextureCell(length: Int, freeRunning: Boolean) extends Module {
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
     val data = Input(UInt(8.W))
@@ -68,12 +69,24 @@ class TextureCell(length: Int) extends Module {
     // ========================================================================
     //  STATE MACHINE
     // ========================================================================
-    when(~io.aresetn) {
-      state := 0.U(10.W)
-    }.elsewhen(io.enable & io.strobe & ~state.orR()) {
-      state := 1.U(10.W)
-    }.elsewhen(io.enable & ~io.strobe) {
-      state := state << 1.U(10.W)
+    if(freeRunning) {
+      // Clock is free-running. Strobe is not required.
+      when(~io.aresetn) {
+        state := 0.U(10.W)
+      }.elsewhen(io.enable & ~state.orR()) {
+        state := 1.U(10.W)
+      }.elsewhen(io.enable) {
+        state := state << 1.U(10.W)
+      }
+    } else {
+      // Clock is NOT free-running. Strobe is required.
+      when(~io.aresetn) {
+        state := 0.U(10.W)
+      }.elsewhen(io.enable & io.strobe & ~state.orR()) {
+        state := 1.U(10.W)
+      }.elsewhen(io.enable & ~io.strobe) {
+        state := state << 1.U(10.W)
+      }
     }
     // ========================================================================
     //  Hold Write Flags and Data
@@ -196,18 +209,34 @@ class TextureCell(length: Int) extends Module {
     // h010 affine subpixels (16 of them) == 1px
     // Let's respect that.
     // I was tight on pipeline steps too.
-    when(~io.aresetn) {
-      textureResult := 0.U(8.W)
-    }.elsewhen(io.enable & ~io.strobe & ~writeMatrix & ~writeTexels) {
-      textureResult := textureMemory.read(
-        Cat(
-          textureMFinal(YfinalOFF)(length + 4, 4),
-          textureMFinal(XfinalOFF)(length + 4, 4)
+    if(freeRunning) {
+      when(~io.aresetn) {
+        textureResult := 0.U(8.W)
+      }.elsewhen(io.enable & state(9) & ~writeMatrix & ~writeTexels) {
+        textureResult := textureMemory.read(
+          Cat(
+            textureMFinal(YfinalOFF)(length + 4, 4),
+            textureMFinal(XfinalOFF)(length + 4, 4)
+          )
         )
-      )
-    }.elsewhen(io.enable & writeTexels & state(1)) {
-      textureMemory.write(address, data)
+      }.elsewhen(io.enable & writeTexels & state(1)) {
+        textureMemory.write(address, data)
+      }
+    } else {
+      when(~io.aresetn) {
+        textureResult := 0.U(8.W)
+      }.elsewhen(io.enable & ~io.strobe & ~writeMatrix & ~writeTexels) {
+        textureResult := textureMemory.read(
+          Cat(
+            textureMFinal(YfinalOFF)(length + 4, 4),
+            textureMFinal(XfinalOFF)(length + 4, 4)
+          )
+        )
+      }.elsewhen(io.enable & writeTexels & state(1)) {
+        textureMemory.write(address, data)
+      }
     }
+    
 
     io.ready := ~state.orR()
     io.textureResult := textureResult

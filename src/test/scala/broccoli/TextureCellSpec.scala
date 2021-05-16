@@ -9,7 +9,7 @@ import chisel3.experimental.BundleLiterals._
 import chiseltest.internal.BackendInterface
 
 class TextureCellSpec extends FreeSpec with ChiselScalatestTester with Matchers {
-  final val TEXWIDTH = 6
+  final val TEXWIDTH = 5
   
   def hexadecimalDump(buf: Array[BigInt]) {
     for(cntY <- 0 to buf.length / (1 << TEXWIDTH) - 1) {
@@ -34,7 +34,7 @@ class TextureCellSpec extends FreeSpec with ChiselScalatestTester with Matchers 
   }
 
   "TextureCell should display properly" in {
-    test(new TextureCell(TEXWIDTH)) { dut =>
+    test(new TextureCell(TEXWIDTH, false)) { dut =>
       // Knock out timeouts w/seemingly undocumented function call
       dut.clock.setTimeout(0)
       val data = new Array[BigInt](1 << (TEXWIDTH * 2))
