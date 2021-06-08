@@ -14,6 +14,7 @@ class VGAIntervalDriver(constraints: VGAIntervalConstraints) extends Module {
     val vSync = Output(Bool())
     val hBlank = Output(Bool())
     val vBlank = Output(Bool())
+    val currFramebuffer = Output(Bool())
 
     val currentX = Output(UInt(12.W))
     val currentY = Output(UInt(12.W))
@@ -24,7 +25,8 @@ class VGAIntervalDriver(constraints: VGAIntervalConstraints) extends Module {
     // val holdY = Reg(constraints.vBackPorch.U(12.W) - 1.U(12.W))
     val holdX = Reg(UInt(12.W))
     val holdY = Reg(UInt(12.W))
-    val xIsZero = Reg(Bool())
+    val allZero = Reg(Bool())
+    val currFramebuffer = Reg(Bool())
 
     // interval for X axis
     when(~io.aresetn) {
@@ -48,6 +50,17 @@ class VGAIntervalDriver(constraints: VGAIntervalConstraints) extends Module {
       )
     }
 
+    when(~io.aresetn) {
+      allZero := false.B
+    } otherwise {
+      allZero := (~holdY.orR) &( ~holdX.orR)
+    }
+    when(~io.aresetn) {
+      currFramebuffer := true.B
+    } .elsewhen(allZero) {
+      currFramebuffer := ~currFramebuffer
+    }
+
     io.hBlank := holdX > constraints.width.asUInt(12.W)
     io.vBlank := holdY > constraints.height.asUInt(12.W)
     io.vSync := ((holdY < constraints.vBlank.asUInt(
@@ -62,5 +75,6 @@ class VGAIntervalDriver(constraints: VGAIntervalConstraints) extends Module {
     ))) ^ (constraints.hNegateSync.asBool())
     io.currentX := holdX
     io.currentY := holdY
+    io.currFramebuffer := currFramebuffer
   }
 }

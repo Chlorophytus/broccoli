@@ -348,3 +348,7 @@ project
 *.fir
 *.v
 *.f
+
+.metals
+.bloop
+project/*

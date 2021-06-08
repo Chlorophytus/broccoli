@@ -5,8 +5,15 @@ package broccoli
 import chisel3._
 import chisel3.util._
 
-class Framebuffer(width: Int, height: Int) extends Module {
-  final val STATEWIDTH = 4
+/** Stores 9-bit pixel data in a 2D array
+  *
+  * @param width Width of the data store
+  * @param height Height of the data store
+  * @param freeRunning Sets whether the state machine is free-running
+  */
+class Framebuffer(width: Int, height: Int, freeRunning: Boolean)
+    extends Module {
+  final val STATEWIDTH = 5
   final val TOTALADDR = log2Ceil(width * height)
 
   val io = IO(new Bundle {
@@ -34,18 +41,30 @@ class Framebuffer(width: Int, height: Int) extends Module {
     // ========================================================================
     //  STATE MACHINE
     // ========================================================================
-    when(~io.aresetn) {
-      state := 0.U(STATEWIDTH.W)
-    }.elsewhen(io.enable & io.strobe & ~state.orR()) {
-      state := 1.U(STATEWIDTH.W)
-    }.elsewhen(io.enable & ~io.strobe) {
-      state := state << 1.U(STATEWIDTH.W)
+    if (freeRunning) {
+      // Clock is free-running. Strobe is not required.
+      when(~io.aresetn) {
+        state := 0.U(STATEWIDTH.W)
+      }.elsewhen(io.enable & ~state.orR()) {
+        state := 1.U(STATEWIDTH.W)
+      }.elsewhen(io.enable) {
+        state := state << 1.U(STATEWIDTH.W)
+      }
+    } else {
+      // Clock is NOT free-running. Strobe is required.
+      when(~io.aresetn) {
+        state := 0.U(STATEWIDTH.W)
+      }.elsewhen(io.enable & io.strobe & ~state.orR()) {
+        state := 1.U(STATEWIDTH.W)
+      }.elsewhen(io.enable & ~io.strobe) {
+        state := state << 1.U(STATEWIDTH.W)
+      }
     }
     // ========================================================================
     //  Hold Write Flags and Data
     // ========================================================================
     when(~io.aresetn) {
-      write := 0.B
+      write := false.B
     }.elsewhen(io.enable & state(0)) {
       write := io.write
     }
@@ -64,9 +83,9 @@ class Framebuffer(width: Int, height: Int) extends Module {
     // ========================================================================
     when(~io.aresetn) {
       result := 0.U(8.W)
-    }.elsewhen(io.enable & ~write) {
+    }.elsewhen(io.enable & ~write & state(STATEWIDTH - 1)) {
       result := frameMemory.read(address)
-    }.elsewhen(io.enable & write & state(1)) {
+    }.elsewhen(io.enable & write & state(STATEWIDTH - 1)) {
       frameMemory.write(address, data)
     }
 
