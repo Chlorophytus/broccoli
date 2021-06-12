@@ -10,6 +10,11 @@ import chisel3.util._
 class Broccoli extends Module {
   final val TEXWIDTH = 5
 
+  // Don't touch these unless you have an idea what you're doing.
+  final val FRAMEBUFFER_WIDTH = 640
+  final val FRAMEBUFFER_HEIGHT = 320
+  final val FRAMEBUFFER_DOWNSCALE = 1
+
   val io = IO(new Bundle {
     val clockP = Input(Clock()) // 25.175MHz
     val clockF = Input(Clock()) // clockP x 5 (0°)
@@ -35,21 +40,21 @@ class Broccoli extends Module {
 
   withReset(~io.aresetn) {
     val vga = Module(new VGAIntervalDriver(new VGAIntervalConstraints {
-      val width = 640
-      val hFrontPorch = 656
-      val hBlank = 752
-      val hBackPorch = 800
-      val hNegateSync = true
+      val width = 1280
+      val hFrontPorch = 1280 + 110
+      val hBlank = 1280 + 110 + 40
+      val hBackPorch = 1280 + 110 + 40 + 220
+      val hNegateSync = false
 
-      val height = 480
-      val vFrontPorch = 490
-      val vBlank = 492
-      val vBackPorch = 525
-      val vNegateSync = true
+      val height = 720
+      val vFrontPorch = 720 + 5
+      val vBlank = 720 + 5 + 5
+      val vBackPorch = 720 + 5 + 5 + 20
+      val vNegateSync = false
     }))
-    val framebuffer0 = Module(new Framebuffer(320, 240, true))
-    val framebuffer1 = Module(new Framebuffer(320, 240, true))
-    val downscaler = Module(new Downscaler(1))
+    val framebuffer0 = Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
+    val framebuffer1 = Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
+    val downscaler = Module(new Downscaler(FRAMEBUFFER_DOWNSCALE))
     val textureMap = Module(new TextureCell(TEXWIDTH, true))
     val tmdsLaneModuleB = Module(new TMDSLane())
     val tmdsLaneModuleG = Module(new TMDSLane())
@@ -71,11 +76,11 @@ class Broccoli extends Module {
     calculatedOffset := ((Cat(
       0.U((framebuffer0.TOTALADDR - 12).W),
       downscaler.io.downscaledY
-    ) % 240.U(framebuffer0.TOTALADDR.W)) * 320.U(framebuffer0.TOTALADDR.W)) +
+    ) % FRAMEBUFFER_HEIGHT.U(framebuffer0.TOTALADDR.W)) * FRAMEBUFFER_WIDTH.U(framebuffer0.TOTALADDR.W)) +
       ((Cat(
         0.U((framebuffer0.TOTALADDR - 12).W),
         downscaler.io.downscaledX
-      ) % 320.U(framebuffer0.TOTALADDR.W)))
+      ) % FRAMEBUFFER_WIDTH.U(framebuffer0.TOTALADDR.W)))
 
     pixel := Mux(
       textureMap.io.stencilTest,
