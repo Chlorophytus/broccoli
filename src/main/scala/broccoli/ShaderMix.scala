@@ -7,7 +7,7 @@ import chisel3.util._
 
 /** Mixes a 3b alpha, a 3b foreground, and a 3b background
   */
-class Mix extends Module {
+class ShaderMix extends Module {
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
     val enable = Input(Bool())
@@ -17,7 +17,7 @@ class Mix extends Module {
     val colorInF = Input(UInt(3.W))
     val colorInB = Input(UInt(3.W))
 
-    val mixedResult = Output(UInt(3.W))
+    val output = Output(UInt(3.W))
     val ready = Output(Bool())
   })
   withReset(~io.aresetn) {
@@ -65,7 +65,7 @@ class Mix extends Module {
         3.W
       ) - alphaInF)) + (colorInB * alphaInF)
     }
-    io.mixedResult := mixedResult(7, 5)
+    io.output := mixedResult(7, 5)
     io.ready := ~state.orR()
   }
 }

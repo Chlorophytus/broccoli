@@ -181,18 +181,26 @@ class TextureCell(length: Int, freeRunning: Boolean) extends Module {
     when(~io.aresetn) {
       textureMInter(0) := 0.S(24.W)
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(2)) {
-      textureMInter(0) := (textureMatrix(XOFF) - textureMatrix(X0OFF)) * textureMatrix(AOFF)
+      textureMInter(0) := (textureMatrix(XOFF) - textureMatrix(
+        X0OFF
+      )) * textureMatrix(AOFF)
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(5)) {
-      textureMInter(0) := (textureMatrix(XOFF) - textureMatrix(X0OFF)) * textureMatrix(COFF)
+      textureMInter(0) := (textureMatrix(XOFF) - textureMatrix(
+        X0OFF
+      )) * textureMatrix(COFF)
     }
     // (Y * B) @ S[2]
     // (Y * D) @ S[5]
     when(~io.aresetn) {
       textureMInter(1) := 0.S(24.W)
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(2)) {
-      textureMInter(1) := (textureMatrix(YOFF) - textureMatrix(Y0OFF)) * textureMatrix(BOFF)
+      textureMInter(1) := (textureMatrix(YOFF) - textureMatrix(
+        Y0OFF
+      )) * textureMatrix(BOFF)
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(5)) {
-      textureMInter(1) := (textureMatrix(YOFF) - textureMatrix(Y0OFF)) * textureMatrix(DOFF)
+      textureMInter(1) := (textureMatrix(YOFF) - textureMatrix(
+        Y0OFF
+      )) * textureMatrix(DOFF)
     }
     // ====== CALCULATE ADDITIONS ======
     // AX + BY @ S[4]
@@ -200,9 +208,17 @@ class TextureCell(length: Int, freeRunning: Boolean) extends Module {
     when(~io.aresetn) {
       textureMFinal := VecInit(0.S(24.W), 0.S(24.W))
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(4)) {
-      textureMFinal(XfinalOFF) := textureMInter(0) + textureMInter(1) + Cat(textureMatrix(X0OFF)(11), 0.U(12.W), textureMatrix(X0OFF)(10,0)).asSInt
+      textureMFinal(XfinalOFF) := textureMInter(0) + textureMInter(1) + Cat(
+        textureMatrix(X0OFF)(11),
+        0.U(12.W),
+        textureMatrix(X0OFF)(10, 0)
+      ).asSInt
     }.elsewhen(io.enable & ~writeMatrix & ~writeTexels & state(7)) {
-      textureMFinal(YfinalOFF) := textureMInter(0) + textureMInter(1) + Cat(textureMatrix(Y0OFF)(11), 0.U(12.W), textureMatrix(Y0OFF)(10,0)).asSInt
+      textureMFinal(YfinalOFF) := textureMInter(0) + textureMInter(1) + Cat(
+        textureMatrix(Y0OFF)(11),
+        0.U(12.W),
+        textureMatrix(Y0OFF)(10, 0)
+      ).asSInt
     }
     // ========================================================================
     //  Map Texture Coordinates
