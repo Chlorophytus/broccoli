@@ -16,7 +16,7 @@ class Broccoli extends Module {
   final val FRAMEBUFFER_DOWNSCALE = 1
 
   val io = IO(new Bundle {
-    val clockP = Input(Clock()) // 25.175MHz
+    val clockP = Input(Clock()) // Main pixel clock
     val clockF = Input(Clock()) // clockP x 5 (0°)
     val clockD = Input(Clock()) // clockP x 5 (-90°)
     val aresetn = Input(Bool())
@@ -26,13 +26,9 @@ class Broccoli extends Module {
     val tmdsLane2 = Output(Bool())
     val tmdsLaneC = Output(Bool())
 
-    val debugAddress = Input(UInt(((TEXWIDTH * 2) + 2).W))
-    val debugData = Input(UInt(8.W))
-    val debugMapAD = Input(UInt(24.W))
-    val debugMapBC = Input(UInt(24.W))
-    val debugMapXY = Input(UInt(24.W))
-    val debugReadCoordX = Output(UInt(12.W))
-    val debugReadCoordY = Output(UInt(12.W))
+    val address = Input(UInt(32.W))
+    val dataI = Input(UInt(32.W))
+    val dataO = Output(UInt(32.W))
 
     val debugVBlank = Output(Bool())
     val debugHBlank = Output(Bool())
@@ -104,8 +100,6 @@ class Broccoli extends Module {
 
     downscaler.io.currentX := vga.io.currentX
     downscaler.io.currentY := vga.io.currentY
-    io.debugReadCoordX := downscaler.io.downscaledX
-    io.debugReadCoordY := downscaler.io.downscaledY
 
     framebuffer0.io.strobe := false.B
     framebuffer0.io.address := calculatedOffset
@@ -127,19 +121,7 @@ class Broccoli extends Module {
     textureMap.io.currentY := downscaler.io.downscaledY
 
     // TODO: Connect these
-    textureMap.io.textureCoordsA := io.debugMapAD(23, 12).asSInt
-    textureMap.io.textureCoordsB := io.debugMapBC(23, 12).asSInt
-    textureMap.io.textureCoordsC := io.debugMapBC(11, 0).asSInt
-    textureMap.io.textureCoordsD := io.debugMapAD(11, 0).asSInt
-
-    textureMap.io.textureCoordsX := io.debugMapXY(23, 12).asSInt
-    textureMap.io.textureCoordsY := io.debugMapXY(11, 0).asSInt
-
     textureMap.io.strobe := false.B
-    textureMap.io.data := io.debugData
-    textureMap.io.address := io.debugAddress((TEXWIDTH * 2) - 1, 0)
-    textureMap.io.writeTexels := io.debugAddress((TEXWIDTH * 2) + 0)
-    textureMap.io.writeMatrix := io.debugAddress((TEXWIDTH * 2) + 1)
 
     // TMDS Lanes
     val resultPixel = Reg(UInt(9.W))
