@@ -12,8 +12,7 @@ class Broccoli extends Module {
 
   // Don't touch these unless you have an idea what you're doing.
   final val FRAMEBUFFER_WIDTH = 640
-  final val FRAMEBUFFER_HEIGHT = 320
-  final val FRAMEBUFFER_DOWNSCALE = 1
+  final val FRAMEBUFFER_HEIGHT = 480
 
   val io = IO(new Bundle {
     val clockP = Input(Clock()) // Main pixel clock
@@ -36,22 +35,22 @@ class Broccoli extends Module {
 
   withReset(~io.aresetn) {
     val vga = Module(new VGAIntervalDriver(new VGAIntervalConstraints {
-      val width = 1280
-      val hFrontPorch = 1280 + 110
-      val hBlank = 1280 + 110 + 40
-      val hBackPorch = 1280 + 110 + 40 + 220
-      val hNegateSync = false
+      val width = 640
+      val hFrontPorch = 640 + 16
+      val hBlank = 640 + 16 + 96
+      val hBackPorch = 640 + 16 + 96 + 40
+      val hNegateSync = true
 
-      val height = 720
-      val vFrontPorch = 720 + 5
-      val vBlank = 720 + 5 + 5
-      val vBackPorch = 720 + 5 + 5 + 20
-      val vNegateSync = false
+      val height = 480
+      val vFrontPorch = 480 + 10
+      val vBlank = 480 + 10 + 2
+      val vBackPorch = 480 + 10 + 2 + 33
+      val vNegateSync = true
     }))
     val framebuffer0 = Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
-    val framebuffer1 = Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
-    val downscaler = Module(new Downscaler(FRAMEBUFFER_DOWNSCALE))
     val textureMap = Module(new TextureCell(TEXWIDTH, true))
+    val clockingTile = Module(new BroccoliClockTile())
+
     val tmdsLaneModuleB = Module(new TMDSLane())
     val tmdsLaneModuleG = Module(new TMDSLane())
     val tmdsLaneModuleR = Module(new TMDSLane())
@@ -71,11 +70,11 @@ class Broccoli extends Module {
 
     calculatedOffset := ((Cat(
       0.U((framebuffer0.TOTALADDR - 12).W),
-      downscaler.io.downscaledY
+      vga.io.currentY
     ) % FRAMEBUFFER_HEIGHT.U(framebuffer0.TOTALADDR.W)) * FRAMEBUFFER_WIDTH.U(framebuffer0.TOTALADDR.W)) +
       ((Cat(
         0.U((framebuffer0.TOTALADDR - 12).W),
-        downscaler.io.downscaledX
+        vga.io.currentX
       ) % FRAMEBUFFER_WIDTH.U(framebuffer0.TOTALADDR.W)))
 
     pixel := Mux(
@@ -91,15 +90,8 @@ class Broccoli extends Module {
       )
     )
 
-    downscaler.io.aresetn := io.aresetn
     framebuffer0.io.aresetn := io.aresetn
-    framebuffer1.io.aresetn := io.aresetn
-    downscaler.clock := io.clockP
     framebuffer0.clock := io.clockF
-    framebuffer1.clock := io.clockF
-
-    downscaler.io.currentX := vga.io.currentX
-    downscaler.io.currentY := vga.io.currentY
 
     framebuffer0.io.strobe := false.B
     framebuffer0.io.address := calculatedOffset
@@ -107,29 +99,19 @@ class Broccoli extends Module {
     framebuffer0.io.write := ~vga.io.currFramebuffer
     framebuffer0.io.data := pixel
 
-    framebuffer1.io.strobe := false.B
-    framebuffer1.io.address := calculatedOffset
-    framebuffer1.io.enable := true.B
-    framebuffer1.io.write := vga.io.currFramebuffer
-    framebuffer1.io.data := pixel
-
     // Texture mapper
     textureMap.clock := io.clockF
     textureMap.io.aresetn := io.aresetn
     textureMap.io.enable := true.B
-    textureMap.io.currentX := downscaler.io.downscaledX
-    textureMap.io.currentY := downscaler.io.downscaledY
+    textureMap.io.currentX := vga.io.currentX
+    textureMap.io.currentY := vga.io.currentY
 
     // TODO: Connect these
     textureMap.io.strobe := false.B
 
     // TMDS Lanes
     val resultPixel = Reg(UInt(9.W))
-    resultPixel := Mux(
-      vga.io.currFramebuffer,
-      framebuffer0.io.result,
-      framebuffer1.io.result
-    )
+    resultPixel := framebuffer0.io.result
 
     tmdsLaneModuleB.io.aresetn := io.aresetn
     tmdsLaneModuleG.io.aresetn := io.aresetn
