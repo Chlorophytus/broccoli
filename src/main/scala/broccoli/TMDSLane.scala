@@ -154,19 +154,20 @@ class TMDSLane extends Module {
     when(~io.aresetn | ~deHoldAperture) {
       n1_d := 4.S(12.W)
     }.elsewhen(qState(0)) {
-      n1_d := ((Cat(0.U(11.W), io.d(0)).asSInt + Cat(
-        0.U(11.W),
-        io.d(1)
-      ).asSInt) + (Cat(0.U(11.W), io.d(2)).asSInt + Cat(
-        0.U(11.W),
-        io.d(3)
-      ).asSInt)) + (Cat(0.U(11.W), io.d(4)).asSInt + Cat(
-        0.U(11.W),
-        io.d(5)
-      ).asSInt) + (Cat(0.U(11.W), io.d(6)).asSInt + Cat(
-        0.U(11.W),
-        io.d(7)
-      ).asSInt)
+//       n1_d := ((Cat(0.U(11.W), io.d(0)).asSInt + Cat(
+//         0.U(11.W),
+//         io.d(1)
+//       ).asSInt) + (Cat(0.U(11.W), io.d(2)).asSInt + Cat(
+//         0.U(11.W),
+//         io.d(3)
+//       ).asSInt)) + (Cat(0.U(11.W), io.d(4)).asSInt + Cat(
+//         0.U(11.W),
+//         io.d(5)
+//       ).asSInt) + (Cat(0.U(11.W), io.d(6)).asSInt + Cat(
+//         0.U(11.W),
+//         io.d(7)
+//       ).asSInt)
+      n1_d :=
     }
     // Q_M side
     when(~io.aresetn | ~deHoldAperture) {

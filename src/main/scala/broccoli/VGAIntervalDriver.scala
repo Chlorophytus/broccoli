@@ -53,11 +53,11 @@ class VGAIntervalDriver(constraints: VGAIntervalConstraints) extends Module {
     when(~io.aresetn) {
       allZero := false.B
     } otherwise {
-      allZero := (~holdY.orR) &( ~holdX.orR)
+      allZero := (~holdY.orR) & (~holdX.orR)
     }
     when(~io.aresetn) {
       currFramebuffer := true.B
-    } .elsewhen(allZero) {
+    }.elsewhen(allZero) {
       currFramebuffer := ~currFramebuffer
     }
 

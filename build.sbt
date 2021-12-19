@@ -1,8 +1,8 @@
 // See README.md for license details.
 
-ThisBuild / scalaVersion := "2.12.13"
+ThisBuild / scalaVersion := "2.12.15"
 ThisBuild / version := "0.2.0"
-ThisBuild / organization := "com.github.chlorophytus"
+ThisBuild / organization := "us.chlorophyt"
 
 lazy val root = (project in file("."))
   .settings(

@@ -1,4 +1,5 @@
 // See README.md for license details.
+// TODO: REMOVE THIS! It is ill-formed!
 
 package broccoli
 

@@ -47,7 +47,8 @@ class Broccoli extends Module {
       val vBackPorch = 480 + 10 + 2 + 33
       val vNegateSync = true
     }))
-    val framebuffer0 = Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
+    val framebuffer0 =
+      Module(new Framebuffer(FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, true))
     val textureMap = Module(new TextureCell(TEXWIDTH, true))
     val clockingTile = Module(new BroccoliClockTile())
 
@@ -71,7 +72,9 @@ class Broccoli extends Module {
     calculatedOffset := ((Cat(
       0.U((framebuffer0.TOTALADDR - 12).W),
       vga.io.currentY
-    ) % FRAMEBUFFER_HEIGHT.U(framebuffer0.TOTALADDR.W)) * FRAMEBUFFER_WIDTH.U(framebuffer0.TOTALADDR.W)) +
+    ) % FRAMEBUFFER_HEIGHT.U(framebuffer0.TOTALADDR.W)) * FRAMEBUFFER_WIDTH.U(
+      framebuffer0.TOTALADDR.W
+    )) +
       ((Cat(
         0.U((framebuffer0.TOTALADDR - 12).W),
         vga.io.currentX
