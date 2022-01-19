@@ -14,10 +14,16 @@ class PopulationCount(width: Int = 5) extends Module {
   })
 
   withReset(~io.aresetn) {
-    io.output := MuxLookup(io.input, 0.U(width.W),
-      Seq.iterate(0, Math.pow(2, width).intValue)(_ + 1).map({gen =>
-        gen.U(width.W) -> BigInt(gen).bitCount.U(log2OutputWidth.W)
-      })
+    io.output := MuxLookup(
+      io.input,
+      0.U(width.W),
+      Seq
+        // enumerate [0, 2**n) natural integer interval...
+        .iterate(0, Math.pow(2, width).intValue)(_ + 1)
+        // ...then (ab)use the bitCount BigInt method for mapping their POPCNTs
+        .map({ gen =>
+          gen.U(width.W) -> BigInt(gen).bitCount.U(log2OutputWidth.W)
+        })
     )
   }
 }
