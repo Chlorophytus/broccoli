@@ -5,39 +5,47 @@ import chisel3.util._
 
 /** TMDS lane XOR or XNOR module
   *
+  * @param width the width of the INPUT, or the output's width minus 1
   * @param negate true = XNOR, false = XOR
   */
-class TMDSLaneXOR(negate: Boolean) extends Module {
-  final val width = 8
+class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
 
-    val data = Input(UInt(width.W)) // data input
-    val qm = Output(UInt((width + 1).W)) // intermediates
+    val input = Input(UInt(width.W)) // data input
+    val output = Output(UInt((width + 1).W)) // intermediates
   })
 
   def calculateXors(n: Int) = {
-    val xors = 0.U((width + 1).W)
-    if (!negate) { xors(width) := true.B }
-    xors(0) := (n & 1).B
-    for (bit <- (1 until width)) {
-      if (negate) {
-        xors(bit) := ((n & (1 << (bit - 1))).B ^ ~(n & (1 << (bit - 0))).B)
-      } else {
-        xors(bit) := ((n & (1 << (bit - 1))).B ^ (n & (1 << (bit - 0))).B)
-      }
-    }
-    xors(width) := ~negate.B
-    xors
+    VecInit(
+      ((n & 1).B +: Seq
+        .iterate(1, width - 1)(_ + 1)
+        .map(acc => {
+          ((n & (1 << (acc - 1))) != 0).B ^ ((n & (1 << (acc - 0))) != 0).B
+        })) :+
+        true.B
+    ).asUInt
+  }
+
+  def calculateXnors(n: Int) = {
+    VecInit(
+      ((n & 1).B +: Seq
+        .iterate(1, width - 1)(_ + 1)
+        .map(acc => {
+          ((n & (1 << (acc - 1))) != 0).B ^ ((n & (1 << (acc - 0))) == 0).B
+        })) :+
+        false.B
+    ).asUInt
   }
 
   withReset(~io.aresetn) {
     val lookup = VecInit(
       Seq
         .iterate(0, Math.pow(2, width).intValue)(_ + 1)
-        .map(calculateXors(_))
+        .map(if (negate) calculateXnors(_) else calculateXors(_))
     )
 
-    io.qm := lookup(io.data)
+    io.output := lookup(io.input)
   }
+  printf(p"${negate.B} ${Hexadecimal(io.input)} -> ${Hexadecimal(io.output)}\n")
 }

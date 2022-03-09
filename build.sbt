@@ -1,6 +1,6 @@
 // See README.md for license details.
 
-ThisBuild / scalaVersion := "2.12.13"
+ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / version := "0.2.0"
 ThisBuild / organization := "us.chlorophyt"
 
@@ -8,22 +8,17 @@ lazy val root = (project in file("."))
   .settings(
     name := "broccoli",
     libraryDependencies ++= Seq(
-      "edu.berkeley.cs" %% "chisel3" % "3.4.4",
-      "edu.berkeley.cs" %% "chiseltest" % "0.3.3" % "test"
+      "edu.berkeley.cs" %% "chisel3" % "3.5.1",
+      "edu.berkeley.cs" %% "chiseltest" % "0.5.0" % "test"
     ),
     scalacOptions ++= Seq(
-      "-Xsource:2.11",
+      "-Xsource:2.13",
       "-language:reflectiveCalls",
       "-deprecation",
       "-feature",
-      "-Xcheckinit",
-
-      "-P:chiselplugin:useBundlePlugin"
+      "-Xcheckinit"
     ),
     addCompilerPlugin(
-      "edu.berkeley.cs" % "chisel3-plugin" % "3.4.4" cross CrossVersion.full
-    ),
-    addCompilerPlugin(
-      "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
+      "edu.berkeley.cs" % "chisel3-plugin" % "3.5.1" cross CrossVersion.full
     )
   )

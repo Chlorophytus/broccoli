@@ -4,12 +4,12 @@ package broccoli
 
 import chisel3._
 import chisel3.util._
-import chisel3.tester._
-import org.scalatest.FreeSpec
+import chiseltest._
+import org.scalatest.freespec.AnyFreeSpec
 import chisel3.experimental.BundleLiterals._
 import chiseltest.internal.BackendInterface
 
-class PopulationCountSpec extends FreeSpec with ChiselScalatestTester {
+class PopulationCountSpec extends AnyFreeSpec with ChiselScalatestTester {
   final val BITS_WIDTH = 6
   "PopulationCount should count ones properly" in {
 

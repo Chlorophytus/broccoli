@@ -34,7 +34,7 @@ class TMDSLane extends Module {
     val holdD = 0.U(8.W)
     val holdC = 0.U(2.W)
 
-    val mXOR = Module(new TMDSLaneXOR(false))
-    val mXNOR = Module(new TMDSLaneXOR(true))
+    // val mXOR = Module(new TMDSLaneXOR(false))
+    // val mXNOR = Module(new TMDSLaneXOR(true))
   }
 }
