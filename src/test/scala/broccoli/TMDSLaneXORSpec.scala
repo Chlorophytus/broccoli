@@ -11,7 +11,7 @@ import chiseltest.internal.BackendInterface
 
 class TMDSLaneXORSpec extends AnyFreeSpec with ChiselScalatestTester {
   final val BITS_WIDTH = 8
-  "TMDSLaneXOR should perform an exclusive or properly" in {
+  "should perform an exclusive or properly" in {
     test(new TMDSLaneXOR(BITS_WIDTH, false)) { dut =>
       {
         def debugXors(toWhat: Int) = {
@@ -21,11 +21,15 @@ class TMDSLaneXORSpec extends AnyFreeSpec with ChiselScalatestTester {
             dut.clock.step(1)
           }
         }
+        // reset here
+        dut.io.aresetn.poke(false.B)
+        dut.io.aresetn.poke(true.B)
+        dut.clock.step(1)
         debugXors(BITS_WIDTH)
       }
     }
   }
-  "TMDSLaneXOR should perform an exclusive negated or properly" in {
+  "should perform an exclusive negated or properly" in {
     test(new TMDSLaneXOR(BITS_WIDTH, true)) { dut =>
       {
         def debugXnors(toWhat: Int) = {
@@ -35,6 +39,10 @@ class TMDSLaneXORSpec extends AnyFreeSpec with ChiselScalatestTester {
             dut.clock.step(1)
           }
         }
+        // reset here
+        dut.io.aresetn.poke(false.B)
+        dut.io.aresetn.poke(true.B)
+        dut.clock.step(1)
         debugXnors(BITS_WIDTH)
       }
     }

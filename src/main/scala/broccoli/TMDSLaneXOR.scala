@@ -47,5 +47,5 @@ class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
 
     io.output := lookup(io.input)
   }
-  printf(p"${negate.B} ${Hexadecimal(io.input)} -> ${Hexadecimal(io.output)}\n")
+  // printf(p"${negate.B} ${Hexadecimal(io.input)} -> ${Hexadecimal(io.output)}\n")
 }

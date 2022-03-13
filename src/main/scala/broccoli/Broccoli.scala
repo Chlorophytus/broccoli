@@ -14,5 +14,8 @@ class Broccoli extends Module {
     val clockF = Input(Clock()) // clockP x 5 (0degs phase)
     val clockD = Input(Clock()) // clockP x 5 (-90degs phase)
   })
-  // TODO: reimplement a lot of stuff...
+  
+  withReset(~io.aresetn) {
+    
+  }
 }
