@@ -1,12 +1,12 @@
 # Broccoli's Architecture
 
-## **BULLETIN**: CURRENT TESTBED STATE
-
-The testbed will currently display a 640x480 tiled texture of configurable size.
-
 ## TBD
 
 Things will change frequently. This is just a brainstorming page...
+
+## Display Controller
+
+Up to 1280x720@60fps? Maybe.
 
 ## Display Lists
 
