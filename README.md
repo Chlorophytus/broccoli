@@ -1,4 +1,5 @@
 # Broccoli
+
 A soft multimedia/graphics processor prototype in Chisel 3
 
 ## **Licensing**
@@ -6,7 +7,7 @@ See [LICENSE](./LICENSE) for licensing information.
 
 ## Specifications
 These are preliminary, they **will** change.
-- 640x480 60Hz output
+- 60Hz output
 - 2D shaders and sprites
 - Hblank/Vblank raster interrupts
 
