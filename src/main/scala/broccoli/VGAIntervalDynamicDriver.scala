@@ -41,7 +41,8 @@ class VGAIntervalDynamicDriver extends Module {
   })
 
   withReset(~io.aresetn) {
-    val registerMap = RegInit(VecInit.fill(REGISTERS_LOG2 * REGISTERS_LOG2)(0.U(12.W)))
+    val registerMap =
+      RegInit(VecInit.fill(REGISTERS_LOG2 * REGISTERS_LOG2)(0.U(12.W)))
     val x = RegInit(0.U(12.W))
     val y = RegInit(0.U(12.W))
     val hBlank = RegInit(true.B)
@@ -55,14 +56,13 @@ class VGAIntervalDynamicDriver extends Module {
     // This event is very rare
     when(io.writeEnable & io.writeStrobe) {
       registerMap(io.registerAddress) := RegNext(io.registerData)
-      ready := RegNext(false.B)
+      ready := false.B
     }.otherwise {
-      ready := RegNext(true.B)
+      ready := true.B
     }
 
-    
     when(~io.aresetn) {
-      hSync := RegNext(false.B)
+      hSync := false.B
     }.elsewhen(x === registerMap(R_HBACKPORCH.U(REGISTERS_LOG2.W))) {
       hSync := RegNext(~registerMap(R_CTRLREG0.U(REGISTERS_LOG2.W))(0))
     }.elsewhen(x === registerMap(R_H.U(REGISTERS_LOG2.W))) {
@@ -75,18 +75,18 @@ class VGAIntervalDynamicDriver extends Module {
 
     // A BLANK event is signaled by a logical low.
     when(~io.aresetn) {
-      hBlank := RegNext(false.B)
+      hBlank := false.B
     }.otherwise {
       hBlank := RegNext(x < registerMap(R_HBLANK.U(REGISTERS_LOG2.W)))
     }
     when(~io.aresetn) {
-      vBlank := RegNext(false.B)
+      vBlank := false.B
     }.otherwise {
       vBlank := RegNext(y < registerMap(R_VBLANK.U(REGISTERS_LOG2.W)))
     }
 
     when(~io.aresetn) {
-      vSync := RegNext(false.B)
+      vSync := false.B
     }.elsewhen(y === registerMap(R_VBACKPORCH.U(REGISTERS_LOG2.W))) {
       vSync := RegNext(~registerMap(R_CTRLREG0.U(REGISTERS_LOG2.W))(1))
     }.elsewhen(y === registerMap(R_V.U(REGISTERS_LOG2.W))) {
@@ -97,16 +97,29 @@ class VGAIntervalDynamicDriver extends Module {
       vSync := RegNext(~registerMap(R_CTRLREG0.U(REGISTERS_LOG2.W))(1))
     }
 
-    when(~io.aresetn | x === registerMap(R_HBACKPORCH.U(REGISTERS_LOG2.W))) {
-      x := RegNext(0.U(12.W))
+    when(~io.aresetn) {
+      x := 0.U(12.W)
     }.otherwise {
-      x := RegNext(x + 1.U(12.W))
+      x := Mux(
+        x === registerMap(R_HBACKPORCH.U(REGISTERS_LOG2.W)),
+        RegNext(0.U(12.W)),
+        RegNext(x + 1.U(12.W))
+      )
     }
 
-    when(~io.aresetn | y === registerMap(R_VBACKPORCH.U(REGISTERS_LOG2.W))) {
-      y := RegNext(0.U(12.W))
+    when(~io.aresetn) {
+      y := 0.U(12.W)
     }.otherwise {
-      y := Mux(x.orR, RegNext(y), RegNext(y + 1.U(12.W)))
+      y := Mux(
+        x.orR,
+        RegNext(y),
+        Mux(
+          y === registerMap(R_VBACKPORCH.U(REGISTERS_LOG2.W)),
+          RegNext(0.U(12.W)),
+          RegNext(y + 1.U(12.W))
+        )
+      )
+
     }
     io.x := x
     io.y := y

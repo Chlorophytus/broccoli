@@ -6,7 +6,7 @@ Things will change frequently. This is just a brainstorming page...
 
 ## Display Controller
 
-Up to 1280x720@60fps? Maybe.
+Up to 640x480@60fps? Maybe.
 
 ## Display Lists
 
