@@ -1,2 +1,2 @@
-java adoptopenjdk-11.0.14+101
-sbt 1.6.2
+java temurin-11.0.16+101
+sbt 1.7.1

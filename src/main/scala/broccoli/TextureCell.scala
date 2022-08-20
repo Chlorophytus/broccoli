@@ -32,8 +32,12 @@ class TextureCell(length: Int) extends Module {
     val y = Input(UInt(12.W))
     val address = Input(UInt((length * 2).W))
     val writeTexels = Input(Bool())
-    val data = Input(UInt(8.W))
-    val pixelOut = Output(UInt(8.W))
+    val data = Input(UInt(7.W))
+
+    val outRed = Output(UInt(2.W))
+    val outGrn = Output(UInt(2.W))
+    val outBlu = Output(UInt(2.W))
+    val outTst = Output(Bool())
 
     val textureCoordA = Input(SInt(16.W))
     val textureCoordB = Input(SInt(16.W))
@@ -52,7 +56,7 @@ class TextureCell(length: Int) extends Module {
     val write = RegInit(false.B)
     val writeTexels = RegInit(false.B)
     val address = RegInit(0.U((length * 2).W))
-    val data = RegInit(0.U(8.W))
+    val data = RegInit(0.U(7.W))
     // Captured on state[0]
     // First 5-tuple cycle supports a texture coordinate calc.
     val textureMatrix = RegInit(VecInit.fill(6)(0.S(16.W)))
@@ -60,8 +64,7 @@ class TextureCell(length: Int) extends Module {
     val textureMatrixFinal = RegInit(VecInit.fill(2)(0.S(32.W)))
     // Second 5-tuple cycle supports a texture memory read.
     // AA BB GG RR
-    // 64*64 texture memory
-    val textureMemory = SyncReadMem(1 << (length * 2), UInt(8.W))
+    val textureMemory = SyncReadMem(1 << (length * 2), UInt(7.W))
     // =========================================================================
     //  Hold Write Flags and Data
     // =========================================================================
@@ -81,7 +84,7 @@ class TextureCell(length: Int) extends Module {
       address := io.address
     }
     when(~io.aresetn) {
-      data := 0.U(8.W)
+      data := 0.U(7.W)
     }.elsewhen(io.enable & mState.io.output(0)) {
       data := io.data
     }
@@ -194,6 +197,9 @@ class TextureCell(length: Int) extends Module {
       textureMemory.write(address, data)
     }
     io.ready := mState.io.output(9)
-    io.pixelOut := textureResult
+    io.outTst := textureResult(6)
+    io.outBlu := textureResult(5, 4)
+    io.outGrn := textureResult(3, 2)
+    io.outRed := textureResult(1, 0)
   }
 }

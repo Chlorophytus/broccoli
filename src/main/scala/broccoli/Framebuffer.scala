@@ -5,7 +5,7 @@ package broccoli
 import chisel3._
 import chisel3.util._
 
-class Framebuffer(width: Int, height: Int) extends Module {
+class Framebuffer(width: Int, height: Int, pelWidth: Int) extends Module {
   val io = IO(new Bundle {
     val aresetn = Input(Bool())
     val enable = Input(Bool())
@@ -13,16 +13,16 @@ class Framebuffer(width: Int, height: Int) extends Module {
     val ready = Output(Bool())
     val x = Input(UInt(12.W))
     val y = Input(UInt(12.W))
-    val inCol = Input(UInt(12.W))
-    val outCol = Output(UInt(12.W))
+    val inCol = Input(UInt((pelWidth * 3).W))
+    val outCol = Output(UInt((pelWidth * 3).W))
   })
   withReset(~io.aresetn) {
     val mState = Module(new OHFiniteStateMachine(5))
-    val mMemory = SyncReadMem(width * height, UInt(12.W))
+    val mMemory = SyncReadMem(width * height, UInt((pelWidth * 3).W))
     val index = RegInit(0.U(24.W))
     val x = RegInit(0.U(12.W))
     val y = RegInit(0.U(12.W))
-    val color = RegInit(0.U(12.W))
+    val color = RegInit(0.U(8.W))
 
     mState.clock := clock
     mState.io.aresetn := io.aresetn
