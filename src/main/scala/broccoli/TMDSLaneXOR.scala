@@ -1,3 +1,5 @@
+// See README.md for license details.
+
 package broccoli
 
 import chisel3._
@@ -44,8 +46,6 @@ class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
         .iterate(0, Math.pow(2, width).intValue)(_ + 1)
         .map(if (negate) calculateXnors(_) else calculateXors(_))
     )
-
     io.output := lookup(io.input)
   }
-  printf(p"${negate.B} ${Hexadecimal(io.input)} -> ${Hexadecimal(io.output)}\n")
 }
