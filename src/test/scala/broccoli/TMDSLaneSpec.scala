@@ -23,13 +23,13 @@ class TMDSLaneSpec extends AnyFreeSpec with ChiselScalatestTester {
           dut.io.dataEnable.poke(true.B)
           dut.clock.setTimeout(0)
 
-          for (i <- (0 until 1024)) {
+          for (i <- (0 until 256)) {
             dut.io.data.poke(Random.nextInt(256))
+            dut.clock.step(5)
             val printme = dut.io.out.peek().litValue.intValue.toBinaryString
             println(
-              f"counter ${dut.io.debugCounter.peek().litValue} output ${"0000000000".substring(printme.length)}${printme}"
+              f"invert ${dut.io.debugInvertQM.peek().litValue} xor ${dut.io.debugUseXOR.peek().litValue} counter ${dut.io.debugDisparity.peek().litValue} output ${"0000000000".substring(printme.length)}${printme}"
             )
-            dut.clock.step(10)
           }
         }
       }

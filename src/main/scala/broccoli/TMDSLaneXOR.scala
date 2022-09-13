@@ -15,7 +15,7 @@ class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
     val aresetn = Input(Bool())
 
     val input = Input(UInt(width.W)) // data input
-    val output = Output(UInt((width + 1).W)) // intermediates
+    val output = Output(UInt(width.W)) // intermediates
   })
 
   def calculateXors(n: Int) = {
@@ -24,8 +24,7 @@ class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
         .iterate(1, width - 1)(_ + 1)
         .map(acc => {
           ((n & (1 << (acc - 1))) != 0).B ^ ((n & (1 << (acc - 0))) != 0).B
-        })) :+
-        true.B
+        })).reverse
     ).asUInt
   }
 
@@ -35,15 +34,14 @@ class TMDSLaneXOR(width: Int, negate: Boolean) extends Module {
         .iterate(1, width - 1)(_ + 1)
         .map(acc => {
           ((n & (1 << (acc - 1))) != 0).B ^ ((n & (1 << (acc - 0))) == 0).B
-        })) :+
-        false.B
+        })).reverse
     ).asUInt
   }
 
   withReset(~io.aresetn) {
     val lookup = VecInit(
       Seq
-        .iterate(0, Math.pow(2, width).intValue)(_ + 1)
+        .iterate(0, Math.pow(2, width - 1).intValue)(_ + 1)
         .map(if (negate) calculateXnors(_) else calculateXors(_))
     )
     io.output := lookup(io.input)
