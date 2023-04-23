@@ -1,14 +1,13 @@
-// See README.md for license details.
-
 package broccoli
 
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
+import com.typesafe.scalalogging._
 
-object Verilog extends App {
-  Console.println("Generating Verilog")
+object Verilog extends App with LazyLogging {
+  logger.info("Generating Verilog")
 
-  (new chisel3.stage.ChiselStage).execute(
+  (new circt.stage.ChiselStage).execute(
     Array("-X", "verilog"),
-    Seq(ChiselGeneratorAnnotation(() => new Broccoli()))
+    Seq(ChiselGeneratorAnnotation(() => new Broccoli))
   )
 }

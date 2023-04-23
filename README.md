@@ -1,5 +1,5 @@
 # Broccoli
-A soft GPU prototype in Chisel 3
+A soft multimedia/graphics processor prototype in Chisel 3
 
 ## **Licensing**
 See [LICENSE](./LICENSE) for licensing information.
