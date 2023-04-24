@@ -3,7 +3,7 @@ package broccoli
 import chisel3._
 import chisel3.util._
 
-/** DVI lane encoder
+/** DVI lane encoder.
   *
   * based off https://gist.github.com/alsrgv/3cf171c17fffe25806693c26ebb276a8
   */
@@ -21,7 +21,7 @@ class TMDSEncoder extends Module {
     val tmdsOData = Output(UInt(10.W))
 
     // Debug
-    val tmdsDDisparity = Output(SInt(5.W))
+    val tmdsDDisparity = Output(SInt(6.W))
     val tmdsDXORIfTrue = Output(Bool())
   })
 
@@ -34,12 +34,12 @@ class TMDSEncoder extends Module {
     mXOR.io.input := io.tmdsIData
     mXNOR.io.input := io.tmdsIData
 
-    val rDisparity = RegInit(0.S(5.W))
+    val rDisparity = RegInit(0.S(6.W))
 
     val rOnesIData = RegInit(0.U(4.W))
     val rInterQ_M = RegInit(0.U(8.W))
     val rOnesInterQ_M = RegInit(0.U(4.W))
-    val rDifferenceInterQ_M = RegInit(0.S(5.W))
+    val rDifferenceInterQ_M = RegInit(0.S(6.W))
     val rInvertQ_M = RegInit(false.B)
     val rUseXOR = RegInit(false.B)
     val rOData = RegInit(0.U(10.W))
@@ -52,10 +52,10 @@ class TMDSEncoder extends Module {
     )
 
     rInvertQ_M := Mux(
-      (rDisparity === 0.S(5.W) && rOnesInterQ_M === 4.U(4.W)),
+      (rDisparity === 0.S(6.W) && rOnesInterQ_M === 4.U(4.W)),
       ~rUseXOR,
-      (rDisparity > 0.S(5.W) && rOnesInterQ_M > 4.U(4.W)) || (rDisparity < 0.S(
-        5.W
+      (rDisparity > 0.S(6.W) && rOnesInterQ_M > 4.U(4.W)) || (rDisparity < 0.S(
+        6.W
       ) && rOnesInterQ_M < 4.U(4.W))
     )
 
@@ -64,7 +64,7 @@ class TMDSEncoder extends Module {
       .U(4.W) || (rOnesIData === 4.U(4.W) && io.tmdsIData(0))
     rInterQ_M := Mux(rUseXOR, mXOR.io.output, mXNOR.io.output)
     rOnesInterQ_M := PopCount(rInterQ_M)
-    rDifferenceInterQ_M := Cat(rOnesInterQ_M, false.B).asSInt - 8.S(5.W)
+    rDifferenceInterQ_M := Cat(rOnesInterQ_M, false.B).asSInt - 8.S(6.W)
 
     when(!io.aresetn) {
       rOData := 0.U(10.W)
@@ -75,15 +75,15 @@ class TMDSEncoder extends Module {
     }
 
     when(!io.aresetn) {
-      rDisparity := 0.S(5.W)
+      rDisparity := 0.S(6.W)
     }.elsewhen(io.enable && io.tmdsIDataEnable) {
       rDisparity := rDisparity + Mux(
         rInvertQ_M,
         -rDifferenceInterQ_M,
         rDifferenceInterQ_M
-      ) + Mux(rInvertQ_M, 1.S(5.W), -1.S(5.W))
+      ) + Mux(rInvertQ_M, 1.S(6.W), -1.S(6.W))
     }.elsewhen(io.enable) {
-      rDisparity := 0.S(5.W)
+      rDisparity := 0.S(6.W)
     }
 
     io.tmdsOData := rOData
