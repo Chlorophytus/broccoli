@@ -341,3 +341,4 @@ hs_err_pid*
 
 # Verilog
 *.v
+*.anno.json
