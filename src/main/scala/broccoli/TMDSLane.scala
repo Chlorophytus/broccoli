@@ -44,15 +44,15 @@ class TMDSLane extends Module {
 
     when(!io.aresetn) {
       rSendToDDR := 0.U(2.W)
-    }.elsewhen(rState(4)) {
+    }.elsewhen(rState(0)) {
       rSendToDDR := mEncoder.io.tmdsOData(9, 8)
-    }.elsewhen(rState(3)) {
+    }.elsewhen(rState(1)) {
       rSendToDDR := mEncoder.io.tmdsOData(7, 6)
     }.elsewhen(rState(2)) {
       rSendToDDR := mEncoder.io.tmdsOData(5, 4)
-    }.elsewhen(rState(1)) {
+    }.elsewhen(rState(3)) {
       rSendToDDR := mEncoder.io.tmdsOData(3, 2)
-    }.elsewhen(rState(0)) {
+    }.elsewhen(rState(4)) {
       rSendToDDR := mEncoder.io.tmdsOData(1, 0)
     }
 

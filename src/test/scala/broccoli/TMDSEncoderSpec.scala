@@ -18,28 +18,28 @@ class TMDSEncoderSpec
 
       dut.io.tmdsIDataEnable.poke(false.B)
       dut.io.tmdsIControl.poke(0.U(2.W))
-      dut.clock.step(1)
+      dut.clock.step(5)
       dut.io.tmdsOData.expect("b1101010100".U(10.W))
       logger.info(
         f"Control 2'b00 => 0x${dut.io.tmdsOData.peek().litValue}%03x (should be 0x354)"
       )
 
       dut.io.tmdsIControl.poke(1.U(2.W))
-      dut.clock.step(1)
+      dut.clock.step(5)
       dut.io.tmdsOData.expect("b0010101011".U(10.W))
       logger.info(
         f"Control 2'b01 => 0x${dut.io.tmdsOData.peek().litValue}%03x (should be 0x0ab)"
       )
 
       dut.io.tmdsIControl.poke(2.U(2.W))
-      dut.clock.step(1)
+      dut.clock.step(5)
       dut.io.tmdsOData.expect("b0101010100".U(10.W))
       logger.info(
         f"Control 2'b10 => 0x${dut.io.tmdsOData.peek().litValue}%03x (should be 0x154)"
       )
 
       dut.io.tmdsIControl.poke(3.U(2.W))
-      dut.clock.step(1)
+      dut.clock.step(5)
       dut.io.tmdsOData.expect("b1010101011".U(10.W))
       logger.info(
         f"Control 2'b11 => 0x${dut.io.tmdsOData.peek().litValue}%03x (should be 0x2ab)"
@@ -61,7 +61,7 @@ class TMDSEncoderSpec
 
       for (i <- (0 until maxUntil)) {
         dut.io.tmdsIData.poke(scala.util.Random.nextInt(256))
-        dut.clock.step(1)
+        dut.clock.step(5)
         val result = dut.io.tmdsDDisparity.peek().litValue
         if (result >= max) {
           max = result.toInt

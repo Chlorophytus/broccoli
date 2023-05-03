@@ -13,5 +13,5 @@ class DDR extends BlackBox with HasBlackBoxResource {
     val d = Input(UInt(2.W))
     val q = Output(Bool())
   })
-  addResource("/vsrc/DDR.v")
+  addResource("DDR.v")
 }

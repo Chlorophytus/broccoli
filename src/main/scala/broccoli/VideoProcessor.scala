@@ -51,7 +51,10 @@ class VideoProcessor extends Module {
       lane.io.aresetn := io.aresetn
       lane.io.enable := io.enable
       lane.io.tmdsIDataEnable := mDriver.io.hBlankN && mDriver.io.vBlankN
-      lane.io.tmdsIData := Cat(mDriver.io.x(4, 0) ^ mDriver.io.y(4, 0), 0.U(4.W))
+      lane.io.tmdsIData := Cat(
+        mDriver.io.x(4, 0) ^ mDriver.io.y(4, 0),
+        0.U(4.W)
+      )
 
       if (n == LANE_BLU) {
         lane.io.tmdsIControl := Cat(mDriver.io.vSync, mDriver.io.hSync)

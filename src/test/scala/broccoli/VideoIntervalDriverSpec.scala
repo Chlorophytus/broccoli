@@ -59,13 +59,13 @@ class VideoIntervalDriverSpec
       }
 
       logger.info("Test Y increment")
-      for(i <- (0 until 525)) {
+      for (i <- (0 until 525)) {
         dut.io.y.expect(i)
         dut.clock.step(800)
       }
     }
   }
-    "VideoIntervalDriver X syncing should work properly at 640x480 60Hz" in {
+  "VideoIntervalDriver X syncing should work properly at 640x480 60Hz" in {
     test(new VideoIntervalDriver(new VideoIntervalData {
       val width = 640
       val height = 480

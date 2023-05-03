@@ -11,7 +11,8 @@ import chisel3.util._
 class VideoIntervalDriver(data: VideoIntervalData) extends Module {
   final val xBlankBegin = data.width + data.hFrontPorch - 1
   final val xBlankEnd = data.width + data.hFrontPorch + data.hBlank - 1
-  final val xMax = data.width + data.hFrontPorch + data.hBlank + data.hBackPorch - 1
+  final val xMax =
+    data.width + data.hFrontPorch + data.hBlank + data.hBackPorch - 1
 
   final val yBlankBegin = data.height + data.vFrontPorch - 1
   final val yBlankEnd = data.height + data.vFrontPorch + data.vBlank - 1
